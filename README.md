@@ -29,11 +29,19 @@ Google Sheetsのデータからメイカーイベントの静的ウェブペー�
 - Python 3.8+
 - uv (Python package manager)
 
-**⚠️ Important Note about Font Files | フォントファイルについての重要な注意**
+**⚠️ Important Notes | 重要な注意事項**
+
+### Font Files | フォントファイルについて
 
 The Noto Sans JP font file (`NotoSansJP-Regular.ttf`) is not included in this repository due to licensing considerations. The script will automatically download the font from Google Fonts when first run. If the download fails, the script will fall back to system default fonts.
 
 Noto Sans JPフォントファイル（`NotoSansJP-Regular.ttf`）はライセンスの関係でリポジトリに含まれていません。スクリプトの初回実行時にGoogle Fontsから自動的にダウンロードされます。ダウンロードに失敗した場合は、システムのデフォルトフォントが使用されます。
+
+### OGP Image URL Configuration | OGP画像URL設定について
+
+**⚠️ For deployment customization**: The OGP image URL in `generate_events.py` is hardcoded to `https://shinichi-ohki.github.io/maker_event/ogp_image.png`. If you're deploying this to a different domain, you'll need to update the `ogp_image_url` variable in the `generate_html()` function to match your deployment URL.
+
+**⚠️ デプロイメントのカスタマイズについて**: `generate_events.py`内のOGP画像URLは`https://shinichi-ohki.github.io/maker_event/ogp_image.png`にハードコードされています。異なるドメインにデプロイする場合は、`generate_html()`関数内の`ogp_image_url`変数をデプロイメントURLに合わせて更新する必要があります。
 
 ## Installation | インストール
 

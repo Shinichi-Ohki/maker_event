@@ -34,6 +34,10 @@ class Event(BaseModel):
     image_url: str = ""
     is_japan: bool = False
     parsed_date: Optional[datetime] = None
+    date_from: Optional[str] = None
+    date_to: Optional[str] = None
+    parsed_date_from: Optional[datetime] = None
+    parsed_date_to: Optional[datetime] = None
     
     def model_post_init(self, __context):
         """初期化後処理"""
@@ -42,6 +46,22 @@ class Event(BaseModel):
                 self.parsed_date = parser.parse(self.date)
             except:
                 self.parsed_date = None
+        
+        # 開始日と終了日をパース
+        if self.date_from:
+            try:
+                self.parsed_date_from = parser.parse(self.date_from)
+                # parsed_dateを開始日に設定（ソート用）
+                if not self.parsed_date:
+                    self.parsed_date = self.parsed_date_from
+            except:
+                self.parsed_date_from = None
+        
+        if self.date_to:
+            try:
+                self.parsed_date_to = parser.parse(self.date_to)
+            except:
+                self.parsed_date_to = None
         
         self.is_japan = self.country.lower() in ['japan', '日本', 'jp']
 
@@ -395,11 +415,15 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
             # 日付の組み立て（年を追加）
             current_year = "2025"
             date_str = ""
+            date_from_full = ""
+            date_to_full = ""
+            
             if date_from:
-                if date_to and date_from != date_to:
-                    date_str = f"{current_year}/{date_from}"
-                else:
-                    date_str = f"{current_year}/{date_from}"
+                date_from_full = f"{current_year}/{date_from}"
+                date_str = date_from_full
+                
+            if date_to:
+                date_to_full = f"{current_year}/{date_to}"
             
             # locationとregionを組み合わせ
             full_location = f"{location}, {region}" if region else location
@@ -432,7 +456,9 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
                 'country': country,
                 'description': description,
                 'url': url,
-                'image_url': image_url
+                'image_url': image_url,
+                'date_from': date_from_full,
+                'date_to': date_to_full
             }
             
             if event_data['name'] and event_data['location']:
@@ -464,6 +490,39 @@ def filter_upcoming_events(events: List[Event], days_ahead: int = 365) -> List[E
             time.sleep(0.5)  # レート制限を避けるための待機
     
     return sorted(upcoming, key=lambda x: x.parsed_date or datetime.max)
+
+
+def format_event_date(event: Event) -> str:
+    """イベント日付を適切にフォーマット"""
+    if not event.parsed_date_from:
+        return ""
+    
+    # 開始日のフォーマット
+    start_date = event.parsed_date_from
+    
+    # 終了日がない、または開始日と同じ場合は単一日
+    if not event.parsed_date_to or event.parsed_date_from.date() == event.parsed_date_to.date():
+        if event.is_japan:
+            return start_date.strftime('%Y年%m月%d日')
+        else:
+            return start_date.strftime('%B %d, %Y')
+    
+    # 複数日開催の場合
+    end_date = event.parsed_date_to
+    
+    if event.is_japan:
+        # 同じ月の場合
+        if start_date.month == end_date.month:
+            return f"{start_date.strftime('%Y年%m月%d日')}〜{end_date.strftime('%d日')}"
+        else:
+            # 月をまたぐ場合
+            return f"{start_date.strftime('%Y年%m月%d日')}〜{end_date.strftime('%m月%d日')}"
+    else:
+        # 英語表記
+        if start_date.month == end_date.month:
+            return f"{start_date.strftime('%B %d')}-{end_date.strftime('%d, %Y')}"
+        else:
+            return f"{start_date.strftime('%B %d')} - {end_date.strftime('%B %d, %Y')}"
 
 
 def generate_html(events: List[Event], template_dir: str = "templates") -> str:
@@ -689,8 +748,8 @@ def generate_html(events: List[Event], template_dir: str = "templates") -> str:
                         {% endif %}
                     </div>
                     <div class="event-content">
-                        {% if event.parsed_date %}
-                        <div class="event-date">{{ event.parsed_date.strftime('%Y年%m月%d日') }}</div>
+                        {% if event.parsed_date_from %}
+                        <div class="event-date">{{ format_event_date(event) }}</div>
                         {% endif %}
                         <h3 class="event-title">{{ event.name }}</h3>
                         <p class="event-location">{{ event.location }}{% if event.country and event.country != event.location %}, {{ event.country }}{% endif %}</p>
@@ -721,8 +780,8 @@ def generate_html(events: List[Event], template_dir: str = "templates") -> str:
                         {% endif %}
                     </div>
                     <div class="event-content">
-                        {% if event.parsed_date %}
-                        <div class="event-date">{{ event.parsed_date.strftime('%B %d, %Y') }}</div>
+                        {% if event.parsed_date_from %}
+                        <div class="event-date">{{ format_event_date(event) }}</div>
                         {% endif %}
                         <h3 class="event-title">{{ event.name }}</h3>
                         <p class="event-location">{{ event.location }}{% if event.country and event.country != event.location %}, {{ event.country }}{% endif %}</p>
@@ -758,6 +817,7 @@ def generate_html(events: List[Event], template_dir: str = "templates") -> str:
     
     # Jinja2でレンダリング
     env = Environment(loader=FileSystemLoader(template_dir))
+    env.globals['format_event_date'] = format_event_date
     template = env.get_template("index.html")
     
     return template.render(
