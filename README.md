@@ -1,5 +1,7 @@
 # Maker Event Generator | メイカーイベント生成ツール
 
+🌐 **Live Demo**: https://shinichi-ohki.github.io/maker_event/
+
 A Python script to generate static web pages for maker events from Google Sheets data.
 
 Google Sheetsのデータからメイカーイベントの静的ウェブページを生成するPythonスクリプトです。
