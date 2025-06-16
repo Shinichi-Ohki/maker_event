@@ -422,12 +422,8 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
                 elif 'taipei' in full_location.lower() or '台北' in full_location or '台湾' in full_location:
                     country = 'Taiwan'
             
-            # 画像URLを取得（URLが存在する場合のみ）
+            # 画像URLは後で今後のイベントのみに対して取得する
             image_url = ""
-            if url:
-                print(f"🖼️  画像取得中: {name}")
-                image_url = extract_image_from_url(url)
-                time.sleep(0.5)  # レート制限を避けるための待機
             
             event_data = {
                 'name': name,
@@ -459,6 +455,13 @@ def filter_upcoming_events(events: List[Event], days_ahead: int = 365) -> List[E
     for event in events:
         if event.parsed_date and event.parsed_date >= now and event.parsed_date <= cutoff_date:
             upcoming.append(event)
+    
+    # 今後のイベントのみサムネイルを取得
+    for event in upcoming:
+        if event.url and not event.image_url:
+            print(f"🖼️  画像取得中: {event.name}")
+            event.image_url = extract_image_from_url(event.url)
+            time.sleep(0.5)  # レート制限を避けるための待機
     
     return sorted(upcoming, key=lambda x: x.parsed_date or datetime.max)
 
