@@ -41,10 +41,7 @@ git clone <repository-url>
 cd maker_event
 ```
 
-2. Install dependencies using uv | uvを使って依存関係をインストール:
-```bash
-uv sync
-```
+2. Dependencies are automatically managed by uv | 依存関係はuvによって自動管理されます
 
 ## Usage | 使用方法
 
@@ -112,11 +109,11 @@ The script looks for these column names (supports both Japanese and English):
 
 ## Development | 開発
 
-### Install development dependencies | 開発依存関係をインストール:
+### Development dependencies | 開発依存関係:
 
-```bash
-uv sync --extra dev
-```
+Development dependencies are automatically managed when running development tools with `uv run`.
+
+開発依存関係は `uv run` で開発ツールを実行する際に自動的に管理されます。
 
 ### Code formatting | コードフォーマット:
 
