@@ -363,7 +363,7 @@ def create_ogp_image(events: List[Event]) -> str:
                         bottom = y_pos + 26
                         
                         # 中央の長方形
-                        draw.rectangle([left + dot_size, top, right - dot_size, bottom], 
+                        draw.rectangle([left + dot_size, top, right - dot_size, bottom - 1], 
                                      fill=bar_color, outline=None)
                         # 左の半円
                         draw.ellipse([left, top, left + dot_size * 2, bottom], 
@@ -375,7 +375,7 @@ def create_ogp_image(events: List[Event]) -> str:
                         # 輪郭線
                         # 中央の長方形の上下線
                         draw.line([left + dot_size, top, right - dot_size, top], fill='white', width=2)
-                        draw.line([left + dot_size, bottom, right - dot_size, bottom], fill='white', width=2)
+                        draw.line([left + dot_size, bottom - 1, right - dot_size, bottom - 1], fill='white', width=2)
                         # 左の半円の輪郭
                         draw.arc([left, top, left + dot_size * 2, bottom], start=90, end=270, fill='white', width=2)
                         # 右の半円の輪郭
