@@ -352,10 +352,38 @@ def create_ogp_image(events: List[Event]) -> str:
                     # バーの色（日本か海外かで色分け）
                     bar_color = '#667eea' if event.is_japan else '#f093fb'
                     
-                    # イベントバーを描画（円形のドット）
+                    # イベントバーを描画（複数日程は丸角長方形、単一日は正円）
                     dot_size = 8
-                    draw.ellipse([x_pos - dot_size, y_pos + 10, x_pos + dot_size, y_pos + 26], 
-                               fill=bar_color, outline='white', width=2)
+                    if event.parsed_date_to and event.parsed_date_from != event.parsed_date_to:
+                        # 複数日程の場合は丸角長方形（角丸長方形）
+                        width_extend = 8
+                        left = x_pos - dot_size - width_extend
+                        right = x_pos + dot_size + width_extend
+                        top = y_pos + 10
+                        bottom = y_pos + 26
+                        
+                        # 中央の長方形
+                        draw.rectangle([left + dot_size, top, right - dot_size, bottom - 1], 
+                                     fill=bar_color, outline=None)
+                        # 左の半円
+                        draw.ellipse([left, top, left + dot_size * 2, bottom], 
+                                   fill=bar_color, outline=None)
+                        # 右の半円
+                        draw.ellipse([right - dot_size * 2, top, right, bottom], 
+                                   fill=bar_color, outline=None)
+                        
+                        # 輪郭線
+                        # 中央の長方形の上下線
+                        draw.line([left + dot_size, top, right - dot_size, top], fill='white', width=2)
+                        draw.line([left + dot_size, bottom - 1, right - dot_size, bottom - 1], fill='white', width=2)
+                        # 左の半円の輪郭
+                        draw.arc([left, top, left + dot_size * 2, bottom], start=90, end=270, fill='white', width=2)
+                        # 右の半円の輪郭
+                        draw.arc([right - dot_size * 2, top, right, bottom], start=270, end=90, fill='white', width=2)
+                    else:
+                        # 単一日の場合は正円
+                        draw.ellipse([x_pos - dot_size, y_pos + 10, x_pos + dot_size, y_pos + 26], 
+                                   fill=bar_color, outline='white', width=2)
                     
                     # イベント名を描画（左側）- 太字効果のため少しずらして重複描画
                     event_name = event.name
@@ -371,7 +399,18 @@ def create_ogp_image(events: List[Event]) -> str:
                     draw.text((20, y_pos + 12), event_name, fill='white', font=event_font)
                     
                     # 日付を描画（ドットの右側）- 太字効果
-                    date_text = event.parsed_date.strftime('%m/%d')
+                    # 複数日程対応
+                    if event.parsed_date_to and event.parsed_date_from != event.parsed_date_to:
+                        if event.parsed_date_from.month == event.parsed_date_to.month:
+                            # 同月の場合: 08/02-03
+                            date_text = f"{event.parsed_date_from.strftime('%m/%d')}-{event.parsed_date_to.strftime('%d')}"
+                        else:
+                            # 月またぎの場合: 08/31-09/01
+                            date_text = f"{event.parsed_date_from.strftime('%m/%d')}-{event.parsed_date_to.strftime('%m/%d')}"
+                    else:
+                        # 単一日の場合
+                        date_text = event.parsed_date_from.strftime('%m/%d') if event.parsed_date_from else event.parsed_date.strftime('%m/%d')
+                    
                     for dx in range(2):
                         for dy in range(2):
                             if dx == 0 and dy == 0:
