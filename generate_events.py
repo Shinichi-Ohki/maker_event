@@ -435,6 +435,7 @@ def create_ogp_image(events: List[Event]) -> str:
 def parse_events(raw_events: List[Dict]) -> List[Event]:
     """生データをEventオブジェクトに変換"""
     events = []
+    current_year = None
     
     for raw in raw_events:
         try:
@@ -447,22 +448,48 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
             url = raw.get('URL', '').strip()
             description = raw.get('備考', '').strip()
             
-            # 空のデータや年だけのヘッダー行をスキップ
-            if not name or not location or name.endswith('年'):
+            # 年のヘッダー行を検出
+            if name.endswith('年') and not location and not date_from:
+                # 年を抽出（例：「2025年」→「2025」）
+                try:
+                    current_year = int(name.replace('年', ''))
+                    print(f"📅 年ヘッダーを検出: {current_year}年")
+                    continue
+                except:
+                    continue
+            
+            # 空のデータをスキップ
+            if not name or not location:
                 continue
             
-            # 日付の組み立て（年を追加）
-            current_year = "2025"
+            # 年が設定されていない場合はデフォルト年を使用
+            if current_year is None:
+                current_year = datetime.now().year
+                print(f"⚠️  年ヘッダーが見つからないため、現在年を使用: {current_year}")
+            
+            # 日付の組み立て
             date_str = ""
             date_from_full = ""
             date_to_full = ""
             
             if date_from:
-                date_from_full = f"{current_year}/{date_from}"
+                # 既に年が含まれているかチェック
+                if '/' in date_from and len(date_from.split('/')) >= 3:
+                    # 既に年月日形式の場合はそのまま使用
+                    date_from_full = date_from
+                else:
+                    # 月日のみの場合は年を追加
+                    date_from_full = f"{current_year}/{date_from}"
                 date_str = date_from_full
                 
             if date_to:
-                date_to_full = f"{current_year}/{date_to}"
+                # 既に年が含まれているかチェック
+                if '/' in date_to and len(date_to.split('/')) >= 3:
+                    # 既に年月日形式の場合はそのまま使用
+                    date_to_full = date_to
+                else:
+                    # 月日のみの場合は年を追加
+                    date_to_full = f"{current_year}/{date_to}"
             
             # locationとregionを組み合わせ
             full_location = f"{location}, {region}" if region else location
@@ -513,7 +540,7 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
     return events
 
 
-def filter_upcoming_events(events: List[Event], days_ahead: int = 365) -> List[Event]:
+def filter_upcoming_events(events: List[Event], days_ahead: int = 730) -> List[Event]:
     """今後開催予定のイベントをフィルタリング"""
     now = datetime.now()
     cutoff_date = now + timedelta(days=days_ahead)
