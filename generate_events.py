@@ -549,7 +549,12 @@ def filter_upcoming_events(events: List[Event], days_ahead: int = 730) -> List[E
     
     upcoming = []
     for event in events:
-        if event.parsed_date and event.parsed_date >= today_start and event.parsed_date <= cutoff_date:
+        # 複数日開催の場合は終了日も考慮
+        event_end_date = event.parsed_date_to if event.parsed_date_to else event.parsed_date
+        event_start_date = event.parsed_date_from if event.parsed_date_from else event.parsed_date
+        
+        # イベントが今日以降に終了する、または今後開始するイベントを含める
+        if event_end_date and event_end_date >= today_start and event_start_date <= cutoff_date:
             upcoming.append(event)
     
     # 今後のイベントのみサムネイルを取得
