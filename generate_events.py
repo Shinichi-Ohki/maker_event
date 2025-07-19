@@ -544,10 +544,12 @@ def filter_upcoming_events(events: List[Event], days_ahead: int = 730) -> List[E
     """今後開催予定のイベントをフィルタリング"""
     now = datetime.now()
     cutoff_date = now + timedelta(days=days_ahead)
+    # 今日の開始時刻（午前0時）を基準にする
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     
     upcoming = []
     for event in events:
-        if event.parsed_date and event.parsed_date >= now and event.parsed_date <= cutoff_date:
+        if event.parsed_date and event.parsed_date >= today_start and event.parsed_date <= cutoff_date:
             upcoming.append(event)
     
     # 今後のイベントのみサムネイルを取得
