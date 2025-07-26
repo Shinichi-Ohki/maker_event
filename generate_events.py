@@ -8,6 +8,7 @@ import csv
 import json
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -16,7 +17,7 @@ import io
 import zipfile
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from dateutil import parser
 from jinja2 import Environment, FileSystemLoader
 from PIL import Image, ImageDraw, ImageFont
@@ -117,28 +118,34 @@ def extract_image_from_url(url: str) -> str:
         
         # OGP画像を優先的に取得
         og_image = soup.find('meta', property='og:image')
-        if og_image and og_image.get('content'):
-            image_url = og_image['content']
-            # 相対URLの場合は絶対URLに変換
-            if image_url.startswith('/'):
-                image_url = urljoin(url, image_url)
-            return image_url
+        if og_image and isinstance(og_image, Tag):
+            content = og_image.get('content')
+            if content and isinstance(content, str):
+                image_url = content
+                # 相対URLの場合は絶対URLに変換
+                if image_url.startswith('/'):
+                    image_url = urljoin(url, image_url)
+                return image_url
         
         # Twitter Card画像を試す
         twitter_image = soup.find('meta', attrs={'name': 'twitter:image'})
-        if twitter_image and twitter_image.get('content'):
-            image_url = twitter_image['content']
-            if image_url.startswith('/'):
-                image_url = urljoin(url, image_url)
-            return image_url
+        if twitter_image and isinstance(twitter_image, Tag):
+            content = twitter_image.get('content')
+            if content and isinstance(content, str):
+                image_url = content
+                if image_url.startswith('/'):
+                    image_url = urljoin(url, image_url)
+                return image_url
         
         # ファビコンを最後の手段として取得
         favicon = soup.find('link', rel='icon') or soup.find('link', rel='shortcut icon')
-        if favicon and favicon.get('href'):
-            favicon_url = favicon['href']
-            if favicon_url.startswith('/'):
-                favicon_url = urljoin(url, favicon_url)
-            return favicon_url
+        if favicon and isinstance(favicon, Tag):
+            href = favicon.get('href')
+            if href and isinstance(href, str):
+                favicon_url = href
+                if favicon_url.startswith('/'):
+                    favicon_url = urljoin(url, favicon_url)
+                return favicon_url
         
         return ""
         
@@ -147,7 +154,7 @@ def extract_image_from_url(url: str) -> str:
         return ""
 
 
-def download_noto_font() -> str:
+def download_noto_font() -> Optional[str]:
     """Noto Sans JP フォントをダウンロード"""
     font_path = "NotoSansJP-Regular.ttf"
     
@@ -400,7 +407,7 @@ def create_ogp_image(events: List[Event]) -> str:
                     
                     # 日付を描画（ドットの右側）- 太字効果
                     # 複数日程対応
-                    if event.parsed_date_to and event.parsed_date_from != event.parsed_date_to:
+                    if event.parsed_date_to and event.parsed_date_from and event.parsed_date_from != event.parsed_date_to:
                         if event.parsed_date_from.month == event.parsed_date_to.month:
                             # 同月の場合: 08/02-03
                             date_text = f"{event.parsed_date_from.strftime('%m/%d')}-{event.parsed_date_to.strftime('%d')}"
@@ -409,7 +416,12 @@ def create_ogp_image(events: List[Event]) -> str:
                             date_text = f"{event.parsed_date_from.strftime('%m/%d')}-{event.parsed_date_to.strftime('%m/%d')}"
                     else:
                         # 単一日の場合
-                        date_text = event.parsed_date_from.strftime('%m/%d') if event.parsed_date_from else event.parsed_date.strftime('%m/%d')
+                        if event.parsed_date_from:
+                            date_text = event.parsed_date_from.strftime('%m/%d')
+                        elif event.parsed_date:
+                            date_text = event.parsed_date.strftime('%m/%d')
+                        else:
+                            date_text = "TBD"
                     
                     for dx in range(2):
                         for dy in range(2):
@@ -540,6 +552,14 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
     return events
 
 
+def fetch_event_image(event: Event) -> Event:
+    """単一イベントの画像を取得"""
+    if event.url and not event.image_url:
+        print(f"🖼️  画像取得中: {event.name}")
+        event.image_url = extract_image_from_url(event.url)
+    return event
+
+
 def filter_upcoming_events(events: List[Event], days_ahead: int = 730) -> List[Event]:
     """今後開催予定のイベントをフィルタリング"""
     now = datetime.now()
@@ -554,15 +574,28 @@ def filter_upcoming_events(events: List[Event], days_ahead: int = 730) -> List[E
         event_start_date = event.parsed_date_from if event.parsed_date_from else event.parsed_date
         
         # イベントが今日以降に終了する、または今後開始するイベントを含める
-        if event_end_date and event_end_date >= today_start and event_start_date <= cutoff_date:
+        if event_end_date and event_end_date >= today_start and event_start_date and event_start_date <= cutoff_date:
             upcoming.append(event)
     
-    # 今後のイベントのみサムネイルを取得
-    for event in upcoming:
-        if event.url and not event.image_url:
-            print(f"🖼️  画像取得中: {event.name}")
-            event.image_url = extract_image_from_url(event.url)
-            time.sleep(0.5)  # レート制限を避けるための待機
+    # 今後のイベントのみサムネイルを並行取得
+    events_needing_images = [event for event in upcoming if event.url and not event.image_url]
+    
+    if events_needing_images:
+        print(f"🖼️  {len(events_needing_images)}件の画像を並行取得中...")
+        
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = []
+            for i, event in enumerate(events_needing_images):
+                if i > 0:
+                    time.sleep(0.1)  # 短い間隔でタスクを開始
+                future = executor.submit(fetch_event_image, event)
+                futures.append(future)
+            
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception as e:
+                    print(f"画像取得エラー: {e}")
     
     return sorted(upcoming, key=lambda x: x.parsed_date or datetime.max)
 
