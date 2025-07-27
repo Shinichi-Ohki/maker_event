@@ -1,0 +1,66 @@
+name: Update Maker Events
+
+on:
+  # 毎日午前3時（日本時間）に実行（UTC 18時前日）
+  schedule:
+    - cron: '0 18 * * *'
+  
+  # 手動実行も可能
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  update-events:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+        
+    - name: Set up Python
+      run: uv python install 3.11
+      
+    - name: Install dependencies
+      run: uv sync
+      
+    - name: Generate events page
+      run: uv run generate_events.py
+      
+    - name: Check for changes
+      id: changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # 変更があるかチェック
+        if git diff --quiet && git diff --cached --quiet; then
+          echo "No changes detected"
+          echo "changes=false" >> $GITHUB_OUTPUT
+        else
+          echo "Changes detected"
+          echo "changes=true" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Commit and push changes
+      if: steps.changes.outputs.changes == 'true'
+      run: |
+        git add index.html ogp_image.png .last_state.json
+        git commit -m "サイト更新
+
+🤖 自動更新 - $(date '+%Y-%m-%d %H:%M:%S JST')
+
+Generated with [Claude Code](https://claude.ai/code)"
+        git push
+        
+    - name: No changes message
+      if: steps.changes.outputs.changes == 'false'
+      run: echo "✅ スプレッドシートに変更がないため、コミットをスキップしました"

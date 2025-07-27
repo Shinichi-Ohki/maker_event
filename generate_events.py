@@ -4,9 +4,13 @@
 Maker Event Static Site Generator
 """
 
+import argparse
 import csv
+import hashlib
 import json
 import re
+import subprocess
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
@@ -74,6 +78,111 @@ def get_spreadsheet_csv_url(sheet_url: str) -> str:
         if sheet_id:
             return f"https://docs.google.com/spreadsheets/d/{sheet_id.group(1)}/export?format=csv"
     return sheet_url
+
+
+def load_last_state() -> Dict:
+    """前回の状態をファイルから読み込み"""
+    state_file = Path(".last_state.json")
+    if state_file.exists():
+        try:
+            with open(state_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"⚠️  前回の状態ファイル読み込みエラー: {e}")
+    return {}
+
+
+def save_last_state(state: Dict) -> None:
+    """現在の状態をファイルに保存"""
+    state_file = Path(".last_state.json")
+    try:
+        with open(state_file, 'w', encoding='utf-8') as f:
+            json.dump(state, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"⚠️  状態ファイル保存エラー: {e}")
+
+
+def get_content_hash(content: str) -> str:
+    """コンテンツのハッシュ値を計算"""
+    return hashlib.md5(content.encode('utf-8')).hexdigest()
+
+
+def has_spreadsheet_changed(sheet_url: str) -> tuple[bool, str]:
+    """スプレッドシートの変更をチェック
+    
+    Returns:
+        tuple[bool, str]: (変更があったか, 現在のハッシュ値)
+    """
+    csv_url = get_spreadsheet_csv_url(sheet_url)
+    
+    try:
+        # 現在のスプレッドシート内容を取得
+        response = requests.get(csv_url, timeout=30)
+        response.raise_for_status()
+        response.encoding = 'utf-8'
+        current_content = response.text
+        current_hash = get_content_hash(current_content)
+        
+        # 前回の状態を読み込み
+        last_state = load_last_state()
+        last_hash = last_state.get('content_hash', '')
+        
+        # 変更をチェック
+        has_changed = current_hash != last_hash
+        
+        if has_changed:
+            print(f"📝 スプレッドシートの変更を検出: {last_hash[:8]} → {current_hash[:8]}")
+        else:
+            print(f"✅ スプレッドシートに変更なし: {current_hash[:8]}")
+        
+        return has_changed, current_hash
+        
+    except Exception as e:
+        print(f"❌ スプレッドシート変更チェックエラー: {e}")
+        return True, ""  # エラー時は更新を実行
+
+
+def auto_commit_and_push() -> bool:
+    """変更をGitリポジトリにコミット・プッシュ"""
+    try:
+        # 変更があるかチェック
+        result = subprocess.run(['git', 'diff', '--quiet'], capture_output=True)
+        staged_result = subprocess.run(['git', 'diff', '--cached', '--quiet'], capture_output=True)
+        
+        if result.returncode == 0 and staged_result.returncode == 0:
+            print("📝 Gitリポジトリに変更がありません")
+            return False
+        
+        # ファイルをステージング
+        files_to_add = ['index.html', 'ogp_image.png', '.last_state.json']
+        for file in files_to_add:
+            if Path(file).exists():
+                subprocess.run(['git', 'add', file], check=True)
+        
+        # コミットメッセージを生成
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S JST')
+        commit_message = f"""サイト更新
+
+🤖 自動更新 - {timestamp}
+
+Generated with [Claude Code](https://claude.ai/code)"""
+        
+        # コミット
+        subprocess.run(['git', 'commit', '-m', commit_message], check=True)
+        print(f"✅ 変更をコミットしました")
+        
+        # プッシュ
+        subprocess.run(['git', 'push'], check=True)
+        print(f"🚀 リポジトリにプッシュしました")
+        
+        return True
+        
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Git操作エラー: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ 予期しないエラー: {e}")
+        return False
 
 
 def fetch_events_from_sheet(sheet_url: str) -> List[Dict]:
@@ -938,7 +1047,27 @@ def generate_html(events: List[Event], template_dir: str = "templates") -> str:
 
 def main():
     """メイン処理"""
+    # コマンドライン引数の解析
+    parser = argparse.ArgumentParser(description='メイカーイベント静的サイト生成スクリプト')
+    parser.add_argument('--auto-push', action='store_true', 
+                       help='変更があった場合、自動的にGitにコミット・プッシュする')
+    parser.add_argument('--force', action='store_true',
+                       help='変更検出をスキップして強制的に実行する')
+    args = parser.parse_args()
+    
     sheet_url = "https://docs.google.com/spreadsheets/d/1a2XqNp01q6hFiyyFjq5hMlYGV66Z9UeOHZP4snSXaz0/edit?gid=0#gid=0"
+    
+    # スプレッドシートの変更をチェック（--forceオプションでスキップ可能）
+    if not args.force:
+        print("🔍 スプレッドシートの変更をチェック中...")
+        has_changed, current_hash = has_spreadsheet_changed(sheet_url)
+        
+        if not has_changed:
+            print("⏭️  変更がないため、HTML生成をスキップします")
+            return
+    else:
+        print("⚡ 強制実行モード: 変更検出をスキップします")
+        current_hash = ""
     
     print("🔄 Google Sheetsからデータを取得中...")
     raw_events = fetch_events_from_sheet(sheet_url)
@@ -967,6 +1096,27 @@ def main():
     print(f"   日本のイベント: {japan_count}件")
     print(f"   海外のイベント: {international_count}件")
     print(f"   合計: {len(upcoming_events)}件")
+    
+    # 成功時に現在の状態を保存（--forceモードの場合は現在のハッシュを取得）
+    if args.force:
+        _, current_hash = has_spreadsheet_changed(sheet_url)
+    
+    state = {
+        'content_hash': current_hash,
+        'last_updated': datetime.now().isoformat(),
+        'event_count': len(upcoming_events)
+    }
+    save_last_state(state)
+    print(f"💾 状態を保存しました: {current_hash[:8]}")
+    
+    # 自動プッシュオプションが指定されている場合
+    if args.auto_push:
+        print("\n🔄 Gitリポジトリへの自動プッシュを実行中...")
+        success = auto_commit_and_push()
+        if success:
+            print("✅ 自動プッシュが完了しました")
+        else:
+            print("⏭️  変更がないためプッシュをスキップしました")
 
 
 if __name__ == "__main__":
