@@ -1022,6 +1022,10 @@ def generate_html(events: List[Event], template_dir: str = "templates") -> str:
         </div>
         {% endif %}
     </div>
+    
+    <footer style="text-align: center; margin-top: 2rem; padding: 1rem; color: #666; font-size: 0.8rem; border-top: 1px solid #e0e0e0;">
+        <p>Last updated: {{ last_updated }}</p>
+    </footer>
 </body>
 </html>"""
     
@@ -1037,11 +1041,18 @@ def generate_html(events: List[Event], template_dir: str = "templates") -> str:
     env.globals['format_event_date'] = format_event_date
     template = env.get_template("index.html")
     
+    # 現在の日時を取得（日本時間）
+    from datetime import timezone, timedelta
+    jst = timezone(timedelta(hours=9))
+    now_jst = datetime.now(jst)
+    last_updated = now_jst.strftime("%Y-%m-%d %H:%M JST")
+    
     return template.render(
         japan_events=japan_events,
         international_events=international_events,
         total_events=len(events),
-        ogp_image_url=ogp_image_url
+        ogp_image_url=ogp_image_url,
+        last_updated=last_updated
     )
 
 
