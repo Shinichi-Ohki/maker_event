@@ -55,10 +55,10 @@ jobs:
       run: |
         git add index.html ogp_image.png .last_state.json
         git commit -m "サイト更新
-
-🤖 自動更新 - $(date '+%Y-%m-%d %H:%M:%S UTC')
-
-Generated with [Claude Code](https://claude.ai/code)"
+        
+        🤖 自動更新 - $(date '+%Y-%m-%d %H:%M:%S UTC')
+        
+        Generated with [Claude Code](https://claude.ai/code)"
         git push
         
     - name: No changes message
