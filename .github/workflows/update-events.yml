@@ -30,7 +30,7 @@ jobs:
       run: uv python install 3.11
       
     - name: Install dependencies
-      run: uv sync
+      run: uv sync --frozen
       
     - name: Generate events page
       run: uv run generate_events.py
@@ -56,7 +56,7 @@ jobs:
         git add index.html ogp_image.png .last_state.json
         git commit -m "サイト更新
 
-🤖 自動更新 - $(date '+%Y-%m-%d %H:%M:%S JST')
+🤖 自動更新 - $(date '+%Y-%m-%d %H:%M:%S UTC')
 
 Generated with [Claude Code](https://claude.ai/code)"
         git push
