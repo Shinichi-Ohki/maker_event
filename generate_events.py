@@ -1023,7 +1023,12 @@ def generate_html(events: List[Event], template_dir: str = "templates") -> str:
         {% endif %}
     </div>
     
-    <footer style="text-align: center; margin-top: 2rem; padding: 1rem; color: #666; font-size: 0.8rem; border-top: 1px solid #e0e0e0;">
+    <div style="text-align: center; margin: 2rem 0 1rem 0;">
+        <h3 style="margin-bottom: 1rem; color: #333; font-size: 1.2rem;">イベントスケジュール | Event Timeline</h3>
+        <img src="ogp_image.png" alt="Upcoming Maker Events Timeline" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    </div>
+    
+    <footer style="text-align: center; margin-top: 1rem; padding: 1rem; color: #666; font-size: 0.8rem; border-top: 1px solid #e0e0e0;">
         <p>Last updated: {{ last_updated }}</p>
     </footer>
 </body>
