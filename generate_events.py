@@ -142,6 +142,43 @@ def has_spreadsheet_changed(sheet_url: str) -> tuple[bool, str]:
         return True, ""  # エラー時は更新を実行
 
 
+def should_update_page(sheet_url: str) -> tuple[bool, str]:
+    """ページ更新が必要かチェック（スプレッドシート変更 + 時間経過）
+    
+    Returns:
+        tuple[bool, str]: (更新が必要か, 現在のハッシュ値)
+    """
+    # スプレッドシートの変更をチェック
+    spreadsheet_changed, current_hash = has_spreadsheet_changed(sheet_url)
+    
+    if spreadsheet_changed:
+        return True, current_hash
+    
+    # スプレッドシートに変更がない場合、時間経過による更新が必要かチェック
+    last_state = load_last_state()
+    last_updated_str = last_state.get('last_updated', '')
+    
+    if not last_updated_str:
+        print("🕒 前回更新時刻が不明のため、更新を実行")
+        return True, current_hash
+    
+    try:
+        last_updated = datetime.fromisoformat(last_updated_str)
+        hours_since_update = (datetime.now() - last_updated).total_seconds() / 3600
+        
+        # 12時間以上経過している場合は時間経過による更新を実行
+        if hours_since_update >= 12:
+            print(f"🕒 前回更新から{hours_since_update:.1f}時間経過: 時間経過による更新を実行")
+            return True, current_hash
+        else:
+            print(f"⏰ 前回更新から{hours_since_update:.1f}時間: 更新不要")
+            return False, current_hash
+            
+    except Exception as e:
+        print(f"⚠️  時間チェックエラー: {e}, 安全のため更新を実行")
+        return True, current_hash
+
+
 def auto_commit_and_push() -> bool:
     """変更をGitリポジトリにコミット・プッシュ"""
     try:
@@ -1073,13 +1110,13 @@ def main():
     
     sheet_url = "https://docs.google.com/spreadsheets/d/1a2XqNp01q6hFiyyFjq5hMlYGV66Z9UeOHZP4snSXaz0/edit?gid=0#gid=0"
     
-    # スプレッドシートの変更をチェック（--forceオプションでスキップ可能）
+    # ページ更新が必要かチェック（--forceオプションでスキップ可能）
     if not args.force:
-        print("🔍 スプレッドシートの変更をチェック中...")
-        has_changed, current_hash = has_spreadsheet_changed(sheet_url)
+        print("🔍 ページ更新の必要性をチェック中...")
+        should_update, current_hash = should_update_page(sheet_url)
         
-        if not has_changed:
-            print("⏭️  変更がないため、HTML生成をスキップします")
+        if not should_update:
+            print("⏭️  更新不要のため、HTML生成をスキップします")
             return
     else:
         print("⚡ 強制実行モード: 変更検出をスキップします")
