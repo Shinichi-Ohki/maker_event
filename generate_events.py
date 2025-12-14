@@ -71,6 +71,37 @@ class Event(BaseModel):
         self.is_japan = self.country.lower() in ['japan', '日本', 'jp']
 
 
+def load_country_mapping() -> Dict[str, str]:
+    """国名マッピングファイルを読み込み"""
+    mapping_file = Path("country_mapping.json")
+    if mapping_file.exists():
+        try:
+            with open(mapping_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"⚠️  国名マッピングファイル読み込みエラー: {e}")
+    return {}
+
+
+def extract_country_from_region(region: str, country_mapping: Dict[str, str]) -> str:
+    """地域列から国名を抽出
+
+    例:
+    - "パリ(フランス)" → "France"
+    - "東京都" → "Japan" (デフォルト)
+    - "サンフランシスコ(アメリカ)" → "USA"
+    """
+    # 括弧内の国名を抽出
+    match = re.search(r'\(([^)]+)\)', region)
+    if match:
+        country_name_ja = match.group(1)
+        # マッピングから英語の国名を取得
+        return country_mapping.get(country_name_ja, country_name_ja)
+
+    # 括弧がない場合はデフォルトで日本
+    return "Japan"
+
+
 def get_spreadsheet_csv_url(sheet_url: str) -> str:
     """Google SheetsのURLをCSVエクスポート用URLに変換"""
     if 'docs.google.com/spreadsheets' in sheet_url:
@@ -594,7 +625,10 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
     """生データをEventオブジェクトに変換"""
     events = []
     current_year = None
-    
+
+    # 国名マッピングを読み込み
+    country_mapping = load_country_mapping()
+
     for raw in raw_events:
         try:
             # 実際のスプレッドシート列名に基づくマッピング
@@ -651,28 +685,9 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
             
             # locationとregionを組み合わせ
             full_location = f"{location}, {region}" if region else location
-            
-            # 国を判定（海外の都市名が含まれている場合は適切に分類）
-            country = '日本'
-            if any(keyword in full_location.lower() for keyword in ['san francisco', 'サンフランシスコ', 'bacolod', 'フィリピン', 'seoul', 'ソウル', '韓国', 'rome', 'ローマ', 'shanghai', '上海', '中国', 'shenzhen', '深圳', 'taipei', '台北', '台湾', 'kuala lumpur', 'クアラルンプール', 'malaysia', 'マレーシア', 'paris', 'パリ', 'france', 'フランス']):
-                if 'san francisco' in full_location.lower() or 'サンフランシスコ' in full_location:
-                    country = 'USA'
-                elif 'bacolod' in full_location.lower() or 'フィリピン' in full_location:
-                    country = 'Philippines'
-                elif 'seoul' in full_location.lower() or 'ソウル' in full_location or '韓国' in full_location:
-                    country = 'South Korea'
-                elif 'rome' in full_location.lower() or 'ローマ' in full_location:
-                    country = 'Italy'
-                elif 'shanghai' in full_location.lower() or '上海' in full_location or '中国' in full_location:
-                    country = 'China'
-                elif 'shenzhen' in full_location.lower() or '深圳' in full_location:
-                    country = 'China'
-                elif 'taipei' in full_location.lower() or '台北' in full_location or '台湾' in full_location:
-                    country = 'Taiwan'
-                elif 'kuala lumpur' in full_location.lower() or 'クアラルンプール' in full_location or 'malaysia' in full_location.lower() or 'マレーシア' in full_location:
-                    country = 'Malaysia'
-                elif 'paris' in full_location.lower() or 'パリ' in full_location or 'france' in full_location.lower() or 'フランス' in full_location:
-                    country = 'France'
+
+            # 地域列から国名を抽出（括弧内の国名を使用）
+            country = extract_country_from_region(region, country_mapping) if region else "Japan"
             
             # 画像URLは後で今後のイベントのみに対して取得する
             image_url = ""
