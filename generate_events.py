@@ -654,7 +654,7 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
             
             # 国を判定（海外の都市名が含まれている場合は適切に分類）
             country = '日本'
-            if any(keyword in full_location.lower() for keyword in ['san francisco', 'サンフランシスコ', 'bacolod', 'フィリピン', 'seoul', 'ソウル', '韓国', 'rome', 'ローマ', 'shanghai', '上海', '中国', 'shenzhen', '深圳', 'taipei', '台北', '台湾', 'kuala lumpur', 'クアラルンプール', 'malaysia', 'マレーシア']):
+            if any(keyword in full_location.lower() for keyword in ['san francisco', 'サンフランシスコ', 'bacolod', 'フィリピン', 'seoul', 'ソウル', '韓国', 'rome', 'ローマ', 'shanghai', '上海', '中国', 'shenzhen', '深圳', 'taipei', '台北', '台湾', 'kuala lumpur', 'クアラルンプール', 'malaysia', 'マレーシア', 'paris', 'パリ', 'france', 'フランス']):
                 if 'san francisco' in full_location.lower() or 'サンフランシスコ' in full_location:
                     country = 'USA'
                 elif 'bacolod' in full_location.lower() or 'フィリピン' in full_location:
@@ -671,6 +671,8 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
                     country = 'Taiwan'
                 elif 'kuala lumpur' in full_location.lower() or 'クアラルンプール' in full_location or 'malaysia' in full_location.lower() or 'マレーシア' in full_location:
                     country = 'Malaysia'
+                elif 'paris' in full_location.lower() or 'パリ' in full_location or 'france' in full_location.lower() or 'フランス' in full_location:
+                    country = 'France'
             
             # 画像URLは後で今後のイベントのみに対して取得する
             image_url = ""
