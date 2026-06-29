@@ -316,6 +316,27 @@ git pull
 #### コミット
 - `90954e4` - サイト更新（自動コミット）
 
+### 28. GitHub Actions の Node.js 20 非推奨対応（2026-06-29）
+
+#### 背景・課題
+- GitHub Actions 実行時に Node.js 20 非推奨の警告が毎回表示される問題
+  - メッセージ: 「Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, astral-sh/setup-uv@v4」
+- 2025-09-19 の GitHub Actions 変更により、Node 20 を使うアクションが強制的に Node 24 で実行されるようになった
+- **2026-06-02** 以降: JavaScriptアクションは Node.js 24 がデフォルトで強制適用（本警告の直接原因）
+- **2026-09-16**: Node.js 20 がランナーから完全削除予定（警告でなくエラーになるため事前対処が必須）
+
+#### 実施内容
+- `.github/workflows/update-events.yml` の2つのアクションを最新メジャー版（Node 24 対応）に更新
+  - `actions/checkout@v4` → `actions/checkout@v5`（v5 で node24 ランタイム対応）
+  - `astral-sh/setup-uv@v4` → `astral-sh/setup-uv@v8`（v8.x が Node 24 対応、最新 v8.2.0）
+
+#### 改善効果
+- Node.js 20 非推奨警告の解消
+- 2026-09-16 の Node.js 20 完全削除前に対応完了（将来のエラー化を予防）
+
+#### 動作確認
+- `gh workflow run` で手動実行し、Actions ログで警告が消えたことを確認
+
 ## 技術スタック
 - **言語**: Python 3.8+
 - **パッケージ管理**: uv
