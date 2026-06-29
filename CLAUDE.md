@@ -337,6 +337,31 @@ git pull
 #### 動作確認
 - `gh workflow run` で手動実行し、Actions ログで警告が消えたことを確認
 
+### 29. pages-build-deployment の Node 20 警告は対応見送り（legacy方式維持・2026-06-29）
+
+#### 背景
+- 28番で `Update Maker Events` ワークフローの Node 20 警告は解消したが、続いて走る `pages-build-deployment` でも同警告が出ることを確認
+  - メッセージ: 「Node.js 20 is deprecated. ... actions/checkout@v4, actions/upload-artifact@v4」
+- 調査の結果、`pages-build-deployment`（ワークフローID 168671278）は **GitHub管理のシステムワークフロー** と判明
+  - リポジトリの `.github/workflows/` にファイルが存在しない（GitHub が裏で管理）
+  - ユーザー側でアクションバージョンを編集できない（ファイル編集での対処が不可）
+
+#### 現在の Pages 設定
+- `build_type: legacy`（「Deploy from a branch」方式 / main ブランチの `/` を公開）
+- `gh api repos/.../pages` の `status: errored` は API の古い状態表示（直近のデプロイは success、実害なし）
+- サイト https://shinichi-ohki.github.io/maker_event/ は正常公開済み
+
+#### 対応方針: legacy方式を維持し対応見送り（ほっとく）
+- 警告は GitHub管理のシステムワークフロー由来のため、ユーザー責任範囲外
+- 実害なし: サイトは正常デプロイ、深夜3時（JST）自動実行で即時性不要
+- コストなし: パブリックリポジトリのため GitHub Actions 無料・利用時間無制限（legacy方式の約4分ビルドも課金0）
+- GitHub は 2026-09-16 の Node 20 完全削除までにシステムワークフローを更新する見込み（放置すると世界中の branch方式ユーザー全員に影響するため）
+
+#### 将来の留意点
+- GitHub は長期的に「GitHub Actions」デプロイ方式を推奨しており、遠い将来 legacy（branch デプロイ）を廃止する可能性あり
+- 廃止時は事前告知があるため、その時に「GitHub Actions方式への移行」を実施すればよい
+- 移行の副次メリット: 警告の完全解消 + デプロイ時間の短縮（現在約4分 → 数十秒）
+
 ## 技術スタック
 - **言語**: Python 3.8+
 - **パッケージ管理**: uv
