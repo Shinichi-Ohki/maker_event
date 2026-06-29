@@ -328,7 +328,7 @@ git pull
 #### 実施内容
 - `.github/workflows/update-events.yml` の2つのアクションを最新メジャー版（Node 24 対応）に更新
   - `actions/checkout@v4` → `actions/checkout@v5`（v5 で node24 ランタイム対応）
-  - `astral-sh/setup-uv@v4` → `astral-sh/setup-uv@v8`（v8.x が Node 24 対応、最新 v8.2.0）
+  - `astral-sh/setup-uv@v4` → `astral-sh/setup-uv@v8.2.0`（v8.0.0 から Node 24 対応。`v8` 移動タグが未作成のためバージョン pin）
 
 #### 改善効果
 - Node.js 20 非推奨警告の解消
