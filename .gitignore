@@ -40,6 +40,7 @@ Thumbs.db
 # Project specific
 templates/
 NotoSansJP-Regular.ttf
+CLAUDE.md
 
 # uv.lock should be committed for reproducible builds
 # uv.lock
