@@ -194,6 +194,8 @@ The script automatically detects countries from the "地域" (Region) column in 
 都市名(都道府県) # e.g., 武蔵小杉(神奈川), 長岡(新潟)
 ```
 
+Both orders work: if the parenthesized text is not a country/prefecture name (e.g., `タイ(バンコク)`), the text outside the parentheses is checked against the mapping as well.
+
 Country and prefecture names are mapped using `country_mapping.json`:
 - All 47 Japanese prefectures are automatically recognized as Japan
 - 40+ international countries are supported
@@ -205,6 +207,8 @@ Country and prefecture names are mapped using `country_mapping.json`:
 都市名(国名)  # 例: パリ(フランス), サンフランシスコ(アメリカ)
 都市名(都道府県) # 例: 武蔵小杉(神奈川), 長岡(新潟)
 ```
+
+括弧の位置が逆でも動作します: 括弧内が国名・都道府県名でない場合（例: `タイ(バンコク)`）は、括弧の外側のテキストもマッピングと照合されます。
 
 国名・都道府県名は`country_mapping.json`を使用してマッピングされます：
 - 日本の47都道府県は全て自動的に日本として認識されます

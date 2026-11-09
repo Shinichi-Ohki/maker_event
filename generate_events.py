@@ -100,19 +100,30 @@ def load_country_mapping() -> Dict[str, str]:
 def extract_country_from_region(region: str, country_mapping: Dict[str, str]) -> str:
     """地域列から国名を抽出
 
-    例:
-    - "パリ(フランス)" → "France"
-    - "東京都" → "Japan" (デフォルト)
-    - "サンフランシスコ(アメリカ)" → "USA"
+    対応パターン:
+    - "パリ(フランス)"          → 括弧内が国名 → "France"
+    - "武蔵小杉(神奈川)"        → 括弧内が都道府県 → "Japan"
+    - "バンコク(タイ)"          → 括弧内が国名 → "Thailand"
+    - "ウランバートル(モンゴル)" → 括弧内が国名（要 country_mapping.json 登録）→ "Mongolia"
+    - "タイ(バンコク)"          → 括弧の外が国名の場合は外側も照会 → "Thailand"
+    - 括弧なし                  → 地域全体が国名ならそれを使用、それ以外は "Japan"（デフォルト）
     """
-    # 括弧内の国名を抽出
-    match = re.search(r'\(([^)]+)\)', region)
+    # 括弧内の国名・都道府県名を抽出（半角・全角括弧に対応）
+    match = re.search(r'[（(]([^)）]+)[)）]', region)
     if match:
-        country_name_ja = match.group(1)
-        # マッピングから英語の国名を取得
-        return country_mapping.get(country_name_ja, country_name_ja)
+        inner = match.group(1).strip()
+        if inner in country_mapping:
+            return country_mapping[inner]
+        # 括弧内が国名でない場合（都市名など）、括弧の外側を国名として照会
+        outer = re.sub(r'[（(][^)）]*[)）]', '', region).strip()
+        if outer in country_mapping:
+            return country_mapping[outer]
+        # どちらにも無い場合は括弧内の表記をそのまま返す（判定不能を隠さない）
+        return inner
 
-    # 括弧がない場合はデフォルトで日本
+    # 括弧なし: 地域全体が国名に一致すればそれを使う（例: "東京" → Japan, "タイ" → Thailand）
+    if region in country_mapping:
+        return country_mapping[region]
     return "Japan"
 
 
