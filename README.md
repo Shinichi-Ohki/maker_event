@@ -129,6 +129,32 @@ The generated `index.html` file will contain:
 - **レスポンシブグリッドレイアウト** - イベント詳細、日付、リンクを含むカード
 - **モダンスタイリング** - ホバーエフェクト付きのプロフェッショナルな外観
 
+## Data Feeds | データフィード
+
+Machine-readable outputs are generated together with the HTML page and published at the same URLs:
+
+HTML ページと同時に、機械可読なデータも生成・公開されます。
+
+| File | URL | Description |
+|------|-----|-------------|
+| `events.json` | https://shinichi-ohki.github.io/maker_event/events.json | Upcoming events as JSON (UTF-8). / 今後のイベントの JSON データ。 |
+| `events.ics` | https://shinichi-ohki.github.io/maker_event/events.ics | iCalendar (RFC 5545) feed for calendar subscription. / カレンダー購読用フィード。 |
+| `llms.txt` | https://shinichi-ohki.github.io/maker_event/llms.txt | LLM-friendly site summary. / LLM 向けのサイト要約。 |
+
+### Calendar Subscription | カレンダー購読
+
+Subscribe via Google Calendar ("Other calendars → From URL"), Apple Calendar, or any iCalendar-compatible app:
+
+Google Calendar（「他のカレンダー → URL で追加」）や Apple Calendar など、iCalendar 互換アプリの URL 指定で購読できます:
+
+```
+https://shinichi-ohki.github.io/maker_event/events.ics
+```
+
+Note: Only upcoming events are included, and ended events are automatically removed. Always check each event's official page for the latest details.
+
+注意: 今後開催されるイベントのみが含まれ、終了したイベントは自動的に除外されます。最新情報は各イベントの公式ページでご確認ください。
+
 ## Configuration | 設定
 
 ### Google Sheets URL | Google Sheets URL
