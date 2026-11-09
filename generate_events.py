@@ -12,8 +12,9 @@ import re
 import subprocess
 import sys
 import time
+import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 from urllib.parse import urlparse, urljoin
@@ -26,6 +27,13 @@ from dateutil import parser
 from jinja2 import Environment, FileSystemLoader
 from PIL import Image, ImageDraw, ImageFont
 from pydantic import BaseModel, Field
+
+# サイト情報（機械可読出力で使用）
+SITE_URL = "https://shinichi-ohki.github.io/maker_event/"
+ICS_UID_DOMAIN = "shinichi-ohki.github.io"
+
+# 「(予定)」「(未定)」などの未確定表記の検出パターン
+TENTATIVE_PATTERN = re.compile(r'[（(]\s*(?:予定|未定)\s*[)）]')
 
 
 class Event(BaseModel):
@@ -43,6 +51,12 @@ class Event(BaseModel):
     date_to: Optional[str] = None
     parsed_date_from: Optional[datetime] = None
     parsed_date_to: Optional[datetime] = None
+    # 機械可読出力 (events.json / events.ics) 用の生データ
+    venue: str = ""
+    region: str = ""
+    x_url: str = ""
+    date_text: str = ""
+    is_tentative: bool = False
     
     def model_post_init(self, __context):
         """初期化後処理"""
@@ -86,19 +100,30 @@ def load_country_mapping() -> Dict[str, str]:
 def extract_country_from_region(region: str, country_mapping: Dict[str, str]) -> str:
     """地域列から国名を抽出
 
-    例:
-    - "パリ(フランス)" → "France"
-    - "東京都" → "Japan" (デフォルト)
-    - "サンフランシスコ(アメリカ)" → "USA"
+    対応パターン:
+    - "パリ(フランス)"          → 括弧内が国名 → "France"
+    - "武蔵小杉(神奈川)"        → 括弧内が都道府県 → "Japan"
+    - "バンコク(タイ)"          → 括弧内が国名 → "Thailand"
+    - "ウランバートル(モンゴル)" → 括弧内が国名（要 country_mapping.json 登録）→ "Mongolia"
+    - "タイ(バンコク)"          → 括弧の外が国名の場合は外側も照会 → "Thailand"
+    - 括弧なし                  → 地域全体が国名ならそれを使用、それ以外は "Japan"（デフォルト）
     """
-    # 括弧内の国名を抽出
-    match = re.search(r'\(([^)]+)\)', region)
+    # 括弧内の国名・都道府県名を抽出（半角・全角括弧に対応）
+    match = re.search(r'[（(]([^)）]+)[)）]', region)
     if match:
-        country_name_ja = match.group(1)
-        # マッピングから英語の国名を取得
-        return country_mapping.get(country_name_ja, country_name_ja)
+        inner = match.group(1).strip()
+        if inner in country_mapping:
+            return country_mapping[inner]
+        # 括弧内が国名でない場合（都市名など）、括弧の外側を国名として照会
+        outer = re.sub(r'[（(][^)）]*[)）]', '', region).strip()
+        if outer in country_mapping:
+            return country_mapping[outer]
+        # どちらにも無い場合は括弧内の表記をそのまま返す（判定不能を隠さない）
+        return inner
 
-    # 括弧がない場合はデフォルトで日本
+    # 括弧なし: 地域全体が国名に一致すればそれを使う（例: "東京" → Japan, "タイ" → Thailand）
+    if region in country_mapping:
+        return country_mapping[region]
     return "Japan"
 
 
@@ -222,7 +247,8 @@ def auto_commit_and_push() -> bool:
             return False
         
         # ファイルをステージング
-        files_to_add = ['index.html', 'ogp_image.png', '.last_state.json']
+        files_to_add = ['index.html', 'ogp_image.png', '.last_state.json',
+                        'events.json', 'events.ics', 'llms.txt']
         for file in files_to_add:
             if Path(file).exists():
                 subprocess.run(['git', 'add', file], check=True)
@@ -638,6 +664,7 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
             date_from = raw.get('から', '').strip()
             date_to = raw.get('まで', '').strip()
             url = raw.get('URL', '').strip()
+            x_url = raw.get('X', '').strip()
             description = raw.get('備考', '').strip()
             
             # 年のヘッダー行を検出
@@ -692,6 +719,20 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
             # 画像URLは後で今後のイベントのみに対して取得する
             image_url = ""
             
+            # 機械可読出力用の生データ（日付はシートの元表記を保持）
+            venue = location
+            if date_from and date_to and date_from != date_to:
+                date_text = f"{date_from}-{date_to}"
+            elif date_from:
+                date_text = date_from
+            else:
+                date_text = date_to
+            is_tentative = bool(
+                TENTATIVE_PATTERN.search(name)
+                or TENTATIVE_PATTERN.search(date_from)
+                or TENTATIVE_PATTERN.search(date_to)
+            )
+
             event_data = {
                 'name': name,
                 'date': date_str,
@@ -701,7 +742,12 @@ def parse_events(raw_events: List[Dict]) -> List[Event]:
                 'url': url,
                 'image_url': image_url,
                 'date_from': date_from_full,
-                'date_to': date_to_full
+                'date_to': date_to_full,
+                'venue': venue,
+                'region': region,
+                'x_url': x_url,
+                'date_text': date_text,
+                'is_tentative': is_tentative,
             }
             
             if event_data['name'] and event_data['location']:
@@ -763,6 +809,15 @@ def filter_upcoming_events(events: List[Event], days_ahead: int = 730) -> List[E
     return sorted(upcoming, key=lambda x: x.parsed_date or datetime.max)
 
 
+def select_undated_events(events: List[Event]) -> List[Event]:
+    """日付が確定していないイベント（「2027年春頃」等でパース失敗）を抽出
+
+    これらは events.json にのみ含め（start_date/end_date = null、date_text に元表記）、
+    HTML と events.ics には含めない。
+    """
+    return [e for e in events if e.parsed_date is None]
+
+
 def format_event_date(event: Event) -> str:
     """イベント日付を適切にフォーマット"""
     if not event.parsed_date_from:
@@ -794,6 +849,138 @@ def format_event_date(event: Event) -> str:
             return f"{start_date.strftime('%B %d')}-{end_date.strftime('%d, %Y')}"
         else:
             return f"{start_date.strftime('%B %d')} - {end_date.strftime('%B %d, %Y')}"
+
+
+def event_public_id(name: str) -> str:
+    """イベント名から安定した公開IDを生成（名前ベースなので日付変更でも不変）"""
+    normalized = unicodedata.normalize('NFC', name.strip())
+    return hashlib.sha1(normalized.encode('utf-8')).hexdigest()[:12]
+
+
+def event_to_dict(event: Event) -> Dict:
+    """events.json 用のイベント dict を生成"""
+    start_date = event.parsed_date_from.strftime('%Y-%m-%d') if event.parsed_date_from else None
+    end_dt = event.parsed_date_to or event.parsed_date_from
+    end_date = end_dt.strftime('%Y-%m-%d') if end_dt else None
+    return {
+        'id': event_public_id(event.name),
+        'name': event.name,
+        'start_date': start_date,
+        'end_date': end_date,
+        'date_text': event.date_text,
+        'is_tentative': event.is_tentative,
+        'country': event.country,
+        'region': event.region,
+        'venue': event.venue,
+        'url': event.url or None,
+        'x_url': event.x_url or None,
+    }
+
+
+def generate_events_json_text(events: List[Event], last_changed_at: datetime) -> str:
+    """events.json の内容を生成（同じデータなら常に同じバイト列になる決定論的出力）"""
+    data = {
+        'schema_version': 1,
+        'site': SITE_URL,
+        'updated_at': last_changed_at.isoformat(),
+        'events': [event_to_dict(e) for e in events],
+    }
+    return json.dumps(data, ensure_ascii=False, indent=2) + '\n'
+
+
+def _escape_ical_text(value: str) -> str:
+    """RFC 5545 3.3.11 の TEXT エスケープ"""
+    value = value.replace('\\', '\\\\')
+    value = value.replace(';', '\\;')
+    value = value.replace(',', '\\,')
+    value = value.replace('\r\n', '\\n')
+    value = value.replace('\r', '\\n')
+    value = value.replace('\n', '\\n')
+    return value
+
+
+def _fold_ical_line(line: str, first_limit: int = 75, cont_limit: int = 74) -> str:
+    """RFC 5545 3.1 の行折り返し（75オクテット、UTF-8 の文字境界で分割）"""
+    octets = line.encode('utf-8')
+    if len(octets) <= first_limit:
+        return line
+    parts = []
+    limit = first_limit
+    while octets:
+        chunk = octets[:limit]
+        # マルチバイト文字の途中で切れないよう、デコード可能な最長プレフィックスまで戻す
+        while chunk:
+            try:
+                chunk.decode('utf-8')
+                break
+            except UnicodeDecodeError:
+                chunk = chunk[:-1]
+        if not chunk:
+            raise ValueError('ICS fold: 文字境界での分割に失敗しました')
+        parts.append(chunk.decode('utf-8'))
+        octets = octets[len(chunk):]
+        limit = cont_limit
+    return '\r\n '.join(parts)
+
+
+def generate_events_ics_text(events: List[Event], last_changed_at: datetime) -> str:
+    """events.ics の内容を生成（RFC 5545 準拠・決定論的出力）
+
+    - 終日イベントとして DTSTART;VALUE=DATE を使用
+    - DTEND は最終日の翌日（排他的終了）
+    - 開始日が確定していないイベントは含めない
+    - DTSTAMP はシート内容が変わった時刻 (last_changed_at) 由来なので実行ごとに変わらない
+    """
+    dtstamp = last_changed_at.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//shinichi-ohki//Maker Event Generator//JA',
+        'CALSCALE:GREGORIAN',
+        'X-WR-CALNAME:' + _escape_ical_text('メイカーイベント一覧 (Upcoming Maker Events)'),
+    ]
+    for event in events:
+        if not event.parsed_date_from:
+            continue
+        start = event.parsed_date_from
+        end = event.parsed_date_to or start
+        lines.append('BEGIN:VEVENT')
+        lines.append(f'UID:{event_public_id(event.name)}@{ICS_UID_DOMAIN}')
+        lines.append(f'DTSTAMP:{dtstamp}')
+        lines.append('DTSTART;VALUE=DATE:' + start.strftime('%Y%m%d'))
+        lines.append('DTEND;VALUE=DATE:' + (end + timedelta(days=1)).strftime('%Y%m%d'))
+        lines.append('SUMMARY:' + _escape_ical_text(event.name))
+        if event.url:
+            lines.append('URL:' + event.url)
+        location_parts = [p for p in (event.venue, event.region, event.country) if p]
+        if location_parts:
+            lines.append('LOCATION:' + _escape_ical_text(', '.join(location_parts)))
+        lines.append('END:VEVENT')
+    lines.append('END:VCALENDAR')
+    return '\r\n'.join(_fold_ical_line(line) for line in lines) + '\r\n'
+
+
+def generate_llms_txt_text(events: List[Event]) -> str:
+    """llms.txt（https://llmstxt.org/ 形式）の内容を生成"""
+    japan_count = sum(1 for e in events if e.is_japan)
+    intl_count = len(events) - japan_count
+    return f"""# Upcoming Maker Events（メイカーイベント一覧）
+
+> Google Sheets のデータから毎日自動生成している、日本と海外のメイカー系イベントの静的一覧サイトです。
+
+## リンク
+
+- [イベント一覧ページ]({SITE_URL}): 日本のイベントは日本語、海外のイベントは英語で掲載
+- [events.json]({SITE_URL}events.json): 今後のイベントの機械可読データ（JSON / UTF-8 / {len(events)}件: 日本{japan_count}・海外{intl_count}）。日付未確定のイベントは start_date / end_date が null
+- [events.ics]({SITE_URL}events.ics): カレンダー購読用 iCalendar（RFC 5545）
+
+## 備考
+
+- 今後開催されるイベントのみを掲載しています（終了したイベントは自動的に除外されます）
+- 日付が未確定（例: 「2027年春頃」）のイベントは events.json にのみ含まれ、一覧ページと events.ics には含まれません
+- 毎日、日本時間の早朝に自動更新されます
+- 日程・会場・出演内容などの最新情報は、各イベントの公式 URL で必ずご確認ください
+"""
 
 
 def generate_html(events: List[Event], template_dir: str = "templates") -> str:
@@ -834,6 +1021,8 @@ def generate_html(events: List[Event], template_dir: str = "templates") -> str:
     <meta name="description" content="世界中のメイカーイベント情報を一覧で確認。Maker Faire、NT、技術書典など{{ total_events }}件のイベント情報を掲載。">
     <meta name="keywords" content="Maker Faire, メイカーイベント, 技術イベント, NT, 技術書典, DIY, ハードウェア, プログラミング">
     <meta name="author" content="Maker Events Team">
+    <link rel="alternate" type="application/json" href="events.json">
+    <link rel="alternate" type="text/calendar" href="events.ics" title="Upcoming Maker Events (iCalendar)">
     <style>
         * {
             margin: 0;
@@ -1084,6 +1273,7 @@ def generate_html(events: List[Event], template_dir: str = "templates") -> str:
     
     <footer style="text-align: center; margin-top: 1rem; padding: 1rem; color: #666; font-size: 0.8rem; border-top: 1px solid #e0e0e0;">
         <p>Last updated: {{ last_updated }}</p>
+        <p>Data feeds: <a href="events.json" style="color: #666;">events.json</a> | <a href="events.ics" style="color: #666;">Calendar (iCal)</a></p>
     </footer>
 </body>
 </html>"""
@@ -1150,13 +1340,38 @@ def main():
     print("🔄 今後のイベントをフィルタリング中...")
     upcoming_events = filter_upcoming_events(events)
     print(f"✅ {len(upcoming_events)}件の今後のイベントを抽出しました")
-    
+
+    # 日付未確定イベント（「2027年春頃」等）は events.json にのみ含める
+    undated_events = select_undated_events(events)
+    if undated_events:
+        print(f"🗓️  日付未確定イベント {len(undated_events)}件を events.json に含めます")
+    json_events = upcoming_events + undated_events
+
+    # シート内容が実際に変わった時刻を追跡（events.json の updated_at / ICS の DTSTAMP 用）
+    # 同じデータなら出力のバイト列が変わらないよう、実行時刻ではなく変更検出時刻を使う
+    now_jst = datetime.now(timezone(timedelta(hours=9)))
+    prev_state = load_last_state()
+    prev_hash = prev_state.get('content_hash', '')
+    if (current_hash and current_hash != prev_hash) or 'last_changed_at' not in prev_state:
+        last_changed_at = now_jst
+    else:
+        try:
+            last_changed_at = datetime.fromisoformat(prev_state['last_changed_at'])
+        except (KeyError, ValueError):
+            last_changed_at = now_jst
+
     print("🔄 HTMLページを生成中...")
     html_content = generate_html(upcoming_events)
     
     output_path = Path("index.html")
     output_path.write_text(html_content, encoding='utf-8')
     print(f"✅ HTMLページを生成しました: {output_path.absolute()}")
+
+    print("🔄 機械可読データ (events.json / events.ics / llms.txt) を生成中...")
+    Path("events.json").write_bytes(generate_events_json_text(json_events, last_changed_at).encode('utf-8'))
+    Path("events.ics").write_bytes(generate_events_ics_text(json_events, last_changed_at).encode('utf-8'))
+    Path("llms.txt").write_bytes(generate_llms_txt_text(json_events).encode('utf-8'))
+    print("✅ events.json / events.ics / llms.txt を生成しました")
     
     # 統計情報を表示
     japan_count = len([e for e in upcoming_events if e.is_japan])
@@ -1166,6 +1381,8 @@ def main():
     print(f"   日本のイベント: {japan_count}件")
     print(f"   海外のイベント: {international_count}件")
     print(f"   合計: {len(upcoming_events)}件")
+    if undated_events:
+        print(f"   日付未確定: {len(undated_events)}件（events.json にのみ掲載）")
     
     # 成功時に現在の状態を保存（--forceモードの場合は現在のハッシュを取得）
     if args.force:
@@ -1174,7 +1391,8 @@ def main():
     state = {
         'content_hash': current_hash,
         'last_updated': datetime.now().isoformat(),
-        'event_count': len(upcoming_events)
+        'event_count': len(upcoming_events),
+        'last_changed_at': last_changed_at.isoformat(),
     }
     save_last_state(state)
     print(f"💾 状態を保存しました: {current_hash[:8]}")

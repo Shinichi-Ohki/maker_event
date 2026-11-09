@@ -53,7 +53,7 @@ jobs:
     - name: Commit and push changes
       if: steps.changes.outputs.changes == 'true'
       run: |
-        git add index.html ogp_image.png .last_state.json
+        git add index.html ogp_image.png .last_state.json events.json events.ics llms.txt
         git commit -m "サイト更新
         
         🤖 自動更新 - $(date '+%Y-%m-%d %H:%M:%S UTC')

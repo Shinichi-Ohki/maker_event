@@ -1,0 +1,214 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//shinichi-ohki//Maker Event Generator//JA
+CALSCALE:GREGORIAN
+X-WR-CALNAME:メイカーイベント一覧 (Upcoming Maker Events)
+BEGIN:VEVENT
+UID:de347caa6d57@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261114
+DTEND;VALUE=DATE:20261116
+SUMMARY:NT名古屋 2026
+URL:https://wiki.nicotech.jp/nico_tech/?NT%E5%90%8D%E5%8F%A4%E5%B1%8B2026
+LOCATION:ヨシヅヤ Yストア 西春店 4F 特設会場\, 名古屋\, Ja
+ pan
+END:VEVENT
+BEGIN:VEVENT
+UID:689beda7ee94@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261122
+DTEND;VALUE=DATE:20261123
+SUMMARY:電波文化祭サイクル7
+URL:https://scrapbox.io/denpa/bunkasai
+LOCATION:入間市産業文化センター\, 入間(埼玉)\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:823584a24108@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261123
+DTEND;VALUE=DATE:20261124
+SUMMARY:技術書典 21
+URL:https://techbookfest.org/event/tbf21
+LOCATION:サンシャインシティ 展示ホールD（文化会館ビル2
+ F）\, 東京\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:faf6ba0e899b@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261128
+DTEND;VALUE=DATE:20261130
+SUMMARY:ながおかAIクリエイターズマーケット
+URL:https://nagaoka-jinruinomirai.jp/
+LOCATION:米百俵プレイス ミライエ長岡\, 長岡(新潟)\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:731e463a02de@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261129
+DTEND;VALUE=DATE:20261130
+SUMMARY:伊勢ギーク・フェア 2026
+URL:https://igfaire.office-kuma.com/
+LOCATION:生涯学習センターいせトピア ふれあい広場・絵
+ 画室\, 伊勢(三重)\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:fcbd4256f531@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261205
+DTEND;VALUE=DATE:20261207
+SUMMARY:Ogaki Mini Maker Faire 2026
+URL:https://www.iamas.ac.jp/news/ogaki_mini_maker_faire_2026/
+LOCATION:ソフトピアジャパン・センタービル\, 大垣(岐阜)\
+ , Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:c372f7e3cc1e@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261208
+DTEND;VALUE=DATE:20261213
+SUMMARY:Maker Faire Sarawak
+URL:https://makeramai-website.vercel.app/
+LOCATION:Plaza Merdeka Shopping Complex\, Kuching(マレーシア)\, Malays
+ ia
+END:VEVENT
+BEGIN:VEVENT
+UID:e4decc122d01@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261212
+DTEND;VALUE=DATE:20261214
+SUMMARY:Maker Faire Shenzhen 2026
+URL:https://www.shenzhenmakerfaire.com/
+LOCATION:万科云城\, 深圳(中国)\, China
+END:VEVENT
+BEGIN:VEVENT
+UID:ac0e1484d6a7@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261219
+DTEND;VALUE=DATE:20261221
+SUMMARY:NT山城 2026
+URL:https://wiki.nicotech.jp/nico_tech/?NT%E5%B1%B1%E5%9F%8E2026
+LOCATION:山城町森林公園\, 山城(京都)\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:8a960133725b@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261220
+DTEND;VALUE=DATE:20261221
+SUMMARY:モノコトフェス #3
+URL:https://few-wood-2b2.notion.site/3-335c4727cabe81d296eee962febef406
+LOCATION:長野県立長野図書館3階　信州・学び創造ラボ\, 
+ 長野\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:c1ed7e3193a8@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261220
+DTEND;VALUE=DATE:20261221
+SUMMARY:生成AIなんでも展示会 in 京都 vol.2
+URL:https://techplay.jp/event/1000546
+LOCATION:京都経済センター 3階\, 京都\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:a73b589bbdfa@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20261229
+DTEND;VALUE=DATE:20270101
+SUMMARY:コミックマーケット109
+URL:https://www.comiket.co.jp/info-a/C109/C109Schedule.html
+LOCATION:東京ビッグサイト\, 東京\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:6f116bffd6ba@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270206
+DTEND;VALUE=DATE:20270207
+SUMMARY:NT松戸 2027
+URL:https://wiki.nicotech.jp/nico_tech/?NT%E6%9D%BE%E6%88%B82027
+LOCATION:キテミテマツド9F アートスポットまつど\, 松戸(
+ 千葉)\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:f422d7b4d1bf@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270313
+DTEND;VALUE=DATE:20270315
+SUMMARY:つくろか！４
+URL:https://tsukuroka3.notion.site/4-WEB-3596d8d17f0280598d39fb6d8590bcdb
+LOCATION:大阪市立中央図書館\, 大阪\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:334af74a8de3@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270314
+DTEND;VALUE=DATE:20270315
+SUMMARY:メイカーズながおかまつり 2027
+URL:https://makers-nagaoka.jp/%e3%83%a1%e3%82%a4%e3%82%ab%e3%83%bc%e3%82%ba
+ %e3%81%aa%e3%81%8c%e3%81%8a%e3%81%8b%e3%81%be%e3%81%a4%e3%82%8a2027%e3%80%
+ 80%e5%8b%9f%e9%9b%86%e9%96%8b%e5%a7%8b%e3%81%97%e3%81%be%e3%81%97%e3%81%9f
+ /
+LOCATION:アオーレ長岡\, 長岡(新潟)\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:9cec964bd239@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270327
+DTEND;VALUE=DATE:20270328
+SUMMARY:キーボードマーケット トーキョー 2027
+URL:https://event.keyket.jp/tokyo-2027/teaser
+LOCATION:都立産業貿易センター 浜松町館 4階\, 東京\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:fb8fc03db0df@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270515
+DTEND;VALUE=DATE:20270516
+SUMMARY:第一五回 技術書同人誌博覧会
+URL:https://blog.gishohaku.dev/
+LOCATION:大田区産業プラザPiO (1F大展示ホール)\, 東京\, Japa
+ n
+END:VEVENT
+BEGIN:VEVENT
+UID:de0b44090425@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270520
+DTEND;VALUE=DATE:20270524
+SUMMARY:TOKYO PROTOTYPE 2027
+URL:https://tokyoprototype.jp/
+LOCATION:虎ノ門ヒルズ エリア\, 東京\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:4da6279e5628@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270626
+DTEND;VALUE=DATE:20270628
+SUMMARY:NT金沢 2027
+LOCATION:金沢駅東もてなしドーム地下広場\, 金沢\, Japan
+END:VEVENT
+BEGIN:VEVENT
+UID:3282216798c5@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270731
+DTEND;VALUE=DATE:20270801
+SUMMARY:Maker Faire Los Angeles 2027
+URL:https://losangeles.makerfaire.com/
+LOCATION:Central Library\, ロサンゼルス(アメリカ)\, USA
+END:VEVENT
+BEGIN:VEVENT
+UID:384abe8fdd6e@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270924
+DTEND;VALUE=DATE:20270927
+SUMMARY:Maker Faire Bay Area 2027
+URL:https://makerfaire.com/bay-area/
+LOCATION:Mare Island\, サンフランシスコ(アメリカ)\, USA
+END:VEVENT
+BEGIN:VEVENT
+UID:1a7b253db4ad@shinichi-ohki.github.io
+DTSTAMP:20261109T124841Z
+DTSTART;VALUE=DATE:20270925
+DTEND;VALUE=DATE:20270927
+SUMMARY:Maker Faire Tokyo 2027
+URL:https://x.com/make_jp/status/2096512398500749816
+LOCATION:有明GYM-EX\, 東京\, Japan
+END:VEVENT
+END:VCALENDAR

@@ -129,6 +129,32 @@ The generated `index.html` file will contain:
 - **レスポンシブグリッドレイアウト** - イベント詳細、日付、リンクを含むカード
 - **モダンスタイリング** - ホバーエフェクト付きのプロフェッショナルな外観
 
+## Data Feeds | データフィード
+
+Machine-readable outputs are generated together with the HTML page and published at the same URLs:
+
+HTML ページと同時に、機械可読なデータも生成・公開されます。
+
+| File | URL | Description |
+|------|-----|-------------|
+| `events.json` | https://shinichi-ohki.github.io/maker_event/events.json | Upcoming events as JSON (UTF-8). / 今後のイベントの JSON データ。 |
+| `events.ics` | https://shinichi-ohki.github.io/maker_event/events.ics | iCalendar (RFC 5545) feed for calendar subscription. / カレンダー購読用フィード。 |
+| `llms.txt` | https://shinichi-ohki.github.io/maker_event/llms.txt | LLM-friendly site summary. / LLM 向けのサイト要約。 |
+
+### Calendar Subscription | カレンダー購読
+
+Subscribe via Google Calendar ("Other calendars → From URL"), Apple Calendar, or any iCalendar-compatible app:
+
+Google Calendar（「他のカレンダー → URL で追加」）や Apple Calendar など、iCalendar 互換アプリの URL 指定で購読できます:
+
+```
+https://shinichi-ohki.github.io/maker_event/events.ics
+```
+
+Note: Only upcoming events are included, and ended events are automatically removed. `events.json` also contains events whose dates are not yet confirmed (e.g. "Spring 2027"): they have `start_date`/`end_date` set to `null` with the original notation kept in `date_text`. The HTML page and `events.ics` include only events with confirmed dates. Always check each event's official page for the latest details.
+
+注意: 今後開催されるイベントのみが含まれ、終了したイベントは自動的に除外されます。`events.json` には日付が未確定のイベント（例: 「2027年春頃」）も含まれ、それらは `start_date` / `end_date` が null で元の表記が `date_text` に入ります。HTML ページと `events.ics` は日付が確定しているイベントのみです。最新情報は各イベントの公式ページでご確認ください。
+
 ## Configuration | 設定
 
 ### Google Sheets URL | Google Sheets URL
@@ -168,6 +194,8 @@ The script automatically detects countries from the "地域" (Region) column in 
 都市名(都道府県) # e.g., 武蔵小杉(神奈川), 長岡(新潟)
 ```
 
+Both orders work: if the parenthesized text is not a country/prefecture name (e.g., `タイ(バンコク)`), the text outside the parentheses is checked against the mapping as well.
+
 Country and prefecture names are mapped using `country_mapping.json`:
 - All 47 Japanese prefectures are automatically recognized as Japan
 - 40+ international countries are supported
@@ -179,6 +207,8 @@ Country and prefecture names are mapped using `country_mapping.json`:
 都市名(国名)  # 例: パリ(フランス), サンフランシスコ(アメリカ)
 都市名(都道府県) # 例: 武蔵小杉(神奈川), 長岡(新潟)
 ```
+
+括弧の位置が逆でも動作します: 括弧内が国名・都道府県名でない場合（例: `タイ(バンコク)`）は、括弧の外側のテキストもマッピングと照合されます。
 
 国名・都道府県名は`country_mapping.json`を使用してマッピングされます：
 - 日本の47都道府県は全て自動的に日本として認識されます
