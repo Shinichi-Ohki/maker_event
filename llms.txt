@@ -5,11 +5,12 @@
 ## リンク
 
 - [イベント一覧ページ](https://shinichi-ohki.github.io/maker_event/): 日本のイベントは日本語、海外のイベントは英語で掲載
-- [events.json](https://shinichi-ohki.github.io/maker_event/events.json): 今後のイベントの機械可読データ（JSON / UTF-8 / 22件: 日本18・海外4）
+- [events.json](https://shinichi-ohki.github.io/maker_event/events.json): 今後のイベントの機械可読データ（JSON / UTF-8 / 23件: 日本19・海外4）。日付未確定のイベントは start_date / end_date が null
 - [events.ics](https://shinichi-ohki.github.io/maker_event/events.ics): カレンダー購読用 iCalendar（RFC 5545）
 
 ## 備考
 
 - 今後開催されるイベントのみを掲載しています（終了したイベントは自動的に除外されます）
+- 日付が未確定（例: 「2027年春頃」）のイベントは events.json にのみ含まれ、一覧ページと events.ics には含まれません
 - 毎日、日本時間の早朝に自動更新されます
 - 日程・会場・出演内容などの最新情報は、各イベントの公式 URL で必ずご確認ください

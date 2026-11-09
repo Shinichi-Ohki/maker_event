@@ -809,6 +809,15 @@ def filter_upcoming_events(events: List[Event], days_ahead: int = 730) -> List[E
     return sorted(upcoming, key=lambda x: x.parsed_date or datetime.max)
 
 
+def select_undated_events(events: List[Event]) -> List[Event]:
+    """日付が確定していないイベント（「2027年春頃」等でパース失敗）を抽出
+
+    これらは events.json にのみ含め（start_date/end_date = null、date_text に元表記）、
+    HTML と events.ics には含めない。
+    """
+    return [e for e in events if e.parsed_date is None]
+
+
 def format_event_date(event: Event) -> str:
     """イベント日付を適切にフォーマット"""
     if not event.parsed_date_from:
@@ -962,12 +971,13 @@ def generate_llms_txt_text(events: List[Event]) -> str:
 ## リンク
 
 - [イベント一覧ページ]({SITE_URL}): 日本のイベントは日本語、海外のイベントは英語で掲載
-- [events.json]({SITE_URL}events.json): 今後のイベントの機械可読データ（JSON / UTF-8 / {len(events)}件: 日本{japan_count}・海外{intl_count}）
+- [events.json]({SITE_URL}events.json): 今後のイベントの機械可読データ（JSON / UTF-8 / {len(events)}件: 日本{japan_count}・海外{intl_count}）。日付未確定のイベントは start_date / end_date が null
 - [events.ics]({SITE_URL}events.ics): カレンダー購読用 iCalendar（RFC 5545）
 
 ## 備考
 
 - 今後開催されるイベントのみを掲載しています（終了したイベントは自動的に除外されます）
+- 日付が未確定（例: 「2027年春頃」）のイベントは events.json にのみ含まれ、一覧ページと events.ics には含まれません
 - 毎日、日本時間の早朝に自動更新されます
 - 日程・会場・出演内容などの最新情報は、各イベントの公式 URL で必ずご確認ください
 """
@@ -1331,6 +1341,12 @@ def main():
     upcoming_events = filter_upcoming_events(events)
     print(f"✅ {len(upcoming_events)}件の今後のイベントを抽出しました")
 
+    # 日付未確定イベント（「2027年春頃」等）は events.json にのみ含める
+    undated_events = select_undated_events(events)
+    if undated_events:
+        print(f"🗓️  日付未確定イベント {len(undated_events)}件を events.json に含めます")
+    json_events = upcoming_events + undated_events
+
     # シート内容が実際に変わった時刻を追跡（events.json の updated_at / ICS の DTSTAMP 用）
     # 同じデータなら出力のバイト列が変わらないよう、実行時刻ではなく変更検出時刻を使う
     now_jst = datetime.now(timezone(timedelta(hours=9)))
@@ -1352,9 +1368,9 @@ def main():
     print(f"✅ HTMLページを生成しました: {output_path.absolute()}")
 
     print("🔄 機械可読データ (events.json / events.ics / llms.txt) を生成中...")
-    Path("events.json").write_bytes(generate_events_json_text(upcoming_events, last_changed_at).encode('utf-8'))
-    Path("events.ics").write_bytes(generate_events_ics_text(upcoming_events, last_changed_at).encode('utf-8'))
-    Path("llms.txt").write_bytes(generate_llms_txt_text(upcoming_events).encode('utf-8'))
+    Path("events.json").write_bytes(generate_events_json_text(json_events, last_changed_at).encode('utf-8'))
+    Path("events.ics").write_bytes(generate_events_ics_text(json_events, last_changed_at).encode('utf-8'))
+    Path("llms.txt").write_bytes(generate_llms_txt_text(json_events).encode('utf-8'))
     print("✅ events.json / events.ics / llms.txt を生成しました")
     
     # 統計情報を表示
@@ -1365,6 +1381,8 @@ def main():
     print(f"   日本のイベント: {japan_count}件")
     print(f"   海外のイベント: {international_count}件")
     print(f"   合計: {len(upcoming_events)}件")
+    if undated_events:
+        print(f"   日付未確定: {len(undated_events)}件（events.json にのみ掲載）")
     
     # 成功時に現在の状態を保存（--forceモードの場合は現在のハッシュを取得）
     if args.force:

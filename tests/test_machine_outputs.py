@@ -12,6 +12,7 @@ from generate_events import (
     generate_events_json_text,
     generate_llms_txt_text,
     parse_events,
+    select_undated_events,
 )
 
 # 決定論的出力の検証に使う固定の last_changed_at（JST）
@@ -170,6 +171,31 @@ def test_ics_parseable_by_icalendar():
     assert with_loc and "テスト会場" in str(with_loc[0]["LOCATION"])
 
 
+# ---------- 日付未確定イベントの合成（main() と同じ構成） ----------
+
+def test_select_undated_events():
+    undated = select_undated_events(EVENTS)
+    assert [e.name for e in undated] == ["日付未確定"]
+
+
+def test_json_includes_undated_but_ics_excludes():
+    # main() と同じ合成: 日付確定済み + 未確定（シート順）
+    dated = sorted([e for e in EVENTS if e.parsed_date is not None],
+                   key=lambda x: x.parsed_date)
+    combined = dated + select_undated_events(EVENTS)
+
+    data = json.loads(generate_events_json_text(combined, STAMP))
+    assert len(data["events"]) == len(EVENTS)
+    last = data["events"][-1]
+    assert last["name"] == "日付未確定"
+    assert last["start_date"] is None and last["end_date"] is None
+    assert last["date_text"] == "2027年春頃"
+
+    ics = generate_events_ics_text(combined, STAMP)
+    assert "日付未確定" not in ics
+    assert ics.count("BEGIN:VEVENT") == len(dated)
+
+
 # ---------- llms.txt ----------
 
 def test_llms_txt_format_and_links():
@@ -181,6 +207,7 @@ def test_llms_txt_format_and_links():
     assert "https://shinichi-ohki.github.io/maker_event/" in text
     assert "今後開催されるイベントのみ" in text
     assert "公式 URL" in text
+    assert "日付が未確定" in text  # 未確定イベントの説明
 
 
 # ---------- 決定論性 ----------

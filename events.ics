@@ -177,11 +177,11 @@ URL:https://tokyoprototype.jp/
 LOCATION:虎ノ門ヒルズ エリア\, 東京\, Japan
 END:VEVENT
 BEGIN:VEVENT
-UID:bc5256ab18db@shinichi-ohki.github.io
+UID:4da6279e5628@shinichi-ohki.github.io
 DTSTAMP:20261109T124841Z
 DTSTART;VALUE=DATE:20270626
 DTEND;VALUE=DATE:20270628
-SUMMARY:NT金沢 2027(予定)
+SUMMARY:NT金沢 2027
 LOCATION:金沢駅東もてなしドーム地下広場\, 金沢\, Japan
 END:VEVENT
 BEGIN:VEVENT

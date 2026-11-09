@@ -151,9 +151,9 @@ Google Calendar（「他のカレンダー → URL で追加」）や Apple Cale
 https://shinichi-ohki.github.io/maker_event/events.ics
 ```
 
-Note: Only upcoming events are included, and ended events are automatically removed. Always check each event's official page for the latest details.
+Note: Only upcoming events are included, and ended events are automatically removed. `events.json` also contains events whose dates are not yet confirmed (e.g. "Spring 2027"): they have `start_date`/`end_date` set to `null` with the original notation kept in `date_text`. The HTML page and `events.ics` include only events with confirmed dates. Always check each event's official page for the latest details.
 
-注意: 今後開催されるイベントのみが含まれ、終了したイベントは自動的に除外されます。最新情報は各イベントの公式ページでご確認ください。
+注意: 今後開催されるイベントのみが含まれ、終了したイベントは自動的に除外されます。`events.json` には日付が未確定のイベント（例: 「2027年春頃」）も含まれ、それらは `start_date` / `end_date` が null で元の表記が `date_text` に入ります。HTML ページと `events.ics` は日付が確定しているイベントのみです。最新情報は各イベントの公式ページでご確認ください。
 
 ## Configuration | 設定
 

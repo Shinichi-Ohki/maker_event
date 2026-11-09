@@ -238,12 +238,12 @@
       "x_url": null
     },
     {
-      "id": "bc5256ab18db",
-      "name": "NT金沢 2027(予定)",
+      "id": "4da6279e5628",
+      "name": "NT金沢 2027",
       "start_date": "2027-06-26",
       "end_date": "2027-06-27",
       "date_text": "2027/06/26-2027/06/27",
-      "is_tentative": true,
+      "is_tentative": false,
       "country": "Japan",
       "region": "金沢",
       "venue": "金沢駅東もてなしドーム地下広場",
@@ -288,6 +288,19 @@
       "venue": "有明GYM-EX",
       "url": "https://x.com/make_jp/status/2096512398500749816",
       "x_url": "https://x.com/make_jp/"
+    },
+    {
+      "id": "a9b86b22d3b6",
+      "name": "NT加賀 2027",
+      "start_date": null,
+      "end_date": null,
+      "date_text": "2027年1月中旬か2月中旬",
+      "is_tentative": false,
+      "country": "Japan",
+      "region": "加賀(石川)",
+      "venue": "アビオシティ加賀",
+      "url": null,
+      "x_url": null
     }
   ]
 }
