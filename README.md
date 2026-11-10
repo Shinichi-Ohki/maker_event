@@ -93,9 +93,9 @@ uv run generate_events.py --force --auto-push
 
 ### Automatic Updates | 自動更新:
 
-The system automatically updates daily at 3 AM JST via GitHub Actions. Manual execution is also available from the GitHub Actions tab.
+The system automatically updates daily around 3:19 AM JST via GitHub Actions (an off-peak minute, chosen to reduce scheduling delays). Manual execution is also available from the GitHub Actions tab.
 
-システムはGitHub Actionsにより毎日午前3時（JST）に自動更新されます。GitHub ActionsタブからManual実行も可能です。
+システムはGitHub Actionsにより毎日午前3時19分（JST）に自動更新されます（毎時0分のcron集中ピークを避けるため、分をずらした時刻にしています）。GitHub ActionsタブからManual実行も可能です。
 
 ### Script Behavior | スクリプトの動作:
 

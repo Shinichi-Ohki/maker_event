@@ -1,9 +1,10 @@
 name: Update Maker Events
 
 on:
-  # 毎日午前3時（日本時間）に実行（UTC 18時前日）
+  # 毎日午前3時19分（日本時間）に実行（UTC 18:19 前日）
+  # 毎時0分は cron の集中ピークで遅延しやすいため、分をずらしている
   schedule:
-    - cron: '0 18 * * *'
+    - cron: '19 18 * * *'
   
   # 手動実行も可能
   workflow_dispatch:
