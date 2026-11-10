@@ -33,31 +33,38 @@ jobs:
       run: uv sync --frozen
       
     - name: Generate events page
-      run: uv run generate_events.py
-      
+      # --frozen: uv.lock を書き換えない（CI での lock ドリフトを防止）
+      run: uv run --frozen generate_events.py
+
     - name: Check for changes
       id: changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        
-        # 変更があるかチェック
-        if git diff --quiet && git diff --cached --quiet; then
+
+        # 変更があるかチェック（出力ファイルのみ対象。uv.lock 等の偶発的な差分では発火しない）
+        OUTPUT_FILES="index.html ogp_image.png .last_state.json events.json events.ics llms.txt"
+        if git diff --quiet -- $OUTPUT_FILES && git diff --cached --quiet -- $OUTPUT_FILES; then
           echo "No changes detected"
           echo "changes=false" >> $GITHUB_OUTPUT
         else
           echo "Changes detected"
           echo "changes=true" >> $GITHUB_OUTPUT
         fi
-        
+
     - name: Commit and push changes
       if: steps.changes.outputs.changes == 'true'
       run: |
-        git add index.html ogp_image.png .last_state.json events.json events.ics llms.txt
+        OUTPUT_FILES="index.html ogp_image.png .last_state.json events.json events.ics llms.txt"
+        git add $OUTPUT_FILES
+        if git diff --cached --quiet; then
+          echo "✅ 出力ファイルに変更がないため、コミットをスキップしました"
+          exit 0
+        fi
         git commit -m "サイト更新
-        
+
         🤖 自動更新 - $(date '+%Y-%m-%d %H:%M:%S UTC')
-        
+
         Generated with [Claude Code](https://claude.ai/code)"
         git push
         
