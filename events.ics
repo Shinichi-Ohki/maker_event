@@ -4,16 +4,6 @@ PRODID:-//shinichi-ohki//Maker Event Generator//JA
 CALSCALE:GREGORIAN
 X-WR-CALNAME:メイカーイベント一覧 (Upcoming Maker Events)
 BEGIN:VEVENT
-UID:de347caa6d57@shinichi-ohki.github.io
-DTSTAMP:20261109T135000Z
-DTSTART;VALUE=DATE:20261114
-DTEND;VALUE=DATE:20261116
-SUMMARY:NT名古屋 2026
-URL:https://wiki.nicotech.jp/nico_tech/?NT%E5%90%8D%E5%8F%A4%E5%B1%8B2026
-LOCATION:ヨシヅヤ Yストア 西春店 4F 特設会場\, 名古屋\, Ja
- pan
-END:VEVENT
-BEGIN:VEVENT
 UID:689beda7ee94@shinichi-ohki.github.io
 DTSTAMP:20261109T135000Z
 DTSTART;VALUE=DATE:20261122
