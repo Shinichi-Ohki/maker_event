@@ -4,32 +4,6 @@
   "updated_at": "2026-11-09T22:50:00.376003+09:00",
   "events": [
     {
-      "id": "689beda7ee94",
-      "name": "電波文化祭サイクル7",
-      "start_date": "2026-11-22",
-      "end_date": "2026-11-22",
-      "date_text": "11/22",
-      "is_tentative": false,
-      "country": "Japan",
-      "region": "入間(埼玉)",
-      "venue": "入間市産業文化センター",
-      "url": "https://scrapbox.io/denpa/bunkasai",
-      "x_url": "https://x.com/denpabunkasai"
-    },
-    {
-      "id": "823584a24108",
-      "name": "技術書典 21",
-      "start_date": "2026-11-23",
-      "end_date": "2026-11-23",
-      "date_text": "11/23",
-      "is_tentative": false,
-      "country": "Japan",
-      "region": "東京",
-      "venue": "サンシャインシティ 展示ホールD（文化会館ビル2F）",
-      "url": "https://techbookfest.org/event/tbf21",
-      "x_url": "https://x.com/techbookfest"
-    },
-    {
       "id": "faf6ba0e899b",
       "name": "ながおかAIクリエイターズマーケット",
       "start_date": "2026-11-28",

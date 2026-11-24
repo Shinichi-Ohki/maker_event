@@ -4,25 +4,6 @@ PRODID:-//shinichi-ohki//Maker Event Generator//JA
 CALSCALE:GREGORIAN
 X-WR-CALNAME:メイカーイベント一覧 (Upcoming Maker Events)
 BEGIN:VEVENT
-UID:689beda7ee94@shinichi-ohki.github.io
-DTSTAMP:20261109T135000Z
-DTSTART;VALUE=DATE:20261122
-DTEND;VALUE=DATE:20261123
-SUMMARY:電波文化祭サイクル7
-URL:https://scrapbox.io/denpa/bunkasai
-LOCATION:入間市産業文化センター\, 入間(埼玉)\, Japan
-END:VEVENT
-BEGIN:VEVENT
-UID:823584a24108@shinichi-ohki.github.io
-DTSTAMP:20261109T135000Z
-DTSTART;VALUE=DATE:20261123
-DTEND;VALUE=DATE:20261124
-SUMMARY:技術書典 21
-URL:https://techbookfest.org/event/tbf21
-LOCATION:サンシャインシティ 展示ホールD（文化会館ビル2
- F）\, 東京\, Japan
-END:VEVENT
-BEGIN:VEVENT
 UID:faf6ba0e899b@shinichi-ohki.github.io
 DTSTAMP:20261109T135000Z
 DTSTART;VALUE=DATE:20261128
